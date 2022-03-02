@@ -383,7 +383,7 @@ def set_monitor(
                                     }
                                 }],
                                 'adjust_pure_negative': adjust_pure_negative,
-                                'boost': 'boost'
+                                'boost': boost
                             },
                             'terms': monitor_query_terms
                         },
