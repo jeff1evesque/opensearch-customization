@@ -227,7 +227,7 @@ def get_monitor(
             r = requests.get(
                 '{}/{}'.format(endpoint, path),
                 auth=awsauth,
-                json={ 'query': { 'match' : { 'monitor.name': monitor_name } } }
+                json={ 'query': { 'match' : { 'monitor.name': monitor_name } } },
                 headers=headers
             )
 
