@@ -320,6 +320,7 @@ def set_monitor(
     post_date_format='epoch_millis',
     post_date_boost=1.0,
     adjust_pure_negative='true',
+    monitor_query_terms={},
     boost=1.0,
     aggregations={},
     trigger_name=None,
@@ -336,6 +337,15 @@ def set_monitor(
     set monitor to run query and check whether results should trigger any alerts
 
     @monitor_id, if provided update monitor by specified id
+    @monitor_query_terms, has an object structure as follows, where 'status' is
+        a field within the cluster index:
+
+        {
+            'status': ['fail'],
+            'boost': 1
+        }
+    @trigger_condition_source, the condition will be applied to the ctx.results,
+        which is a byproduct of the 'monitor_query_terms' (acting as a filter)
 
     '''
 
@@ -346,7 +356,7 @@ def set_monitor(
             'type': 'monitor',
             'name': monitor_name,
             'monitor_type': 'query_level_monitor',
-            'enabled': true,
+            'enabled': 'true',
             'schedule': {
                 'period': {
                     'interval': schedule_interval,
@@ -374,7 +384,8 @@ def set_monitor(
                                 }],
                                 'adjust_pure_negative': adjust_pure_negative,
                                 'boost': 'boost'
-                            }
+                            },
+                            'terms': monitor_query_terms
                         },
                         'aggregations': aggregations
                     }
