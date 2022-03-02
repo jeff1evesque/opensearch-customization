@@ -117,7 +117,7 @@ OpenSearchConfiguration:
 
 ## Helper Functions
 
-Please review functions defined in the following files, and invoke them as desired in `lambda.py`:
+Please review functions defined in the following files, and invoke them as desired in [`lambda.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/lambda.py):
 
 - [`get_configuration.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/get_configuration.py)
 - [`set_configuration.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/set_configuration.py)
