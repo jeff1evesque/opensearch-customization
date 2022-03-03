@@ -86,11 +86,15 @@ OpenSearchConfiguration:
             {
                 "properties": {
                     "${OpenSearchTimeStampField}": {
-                        "type": "datetime",
-                        "format": "${OpenSearchTimeStampFieldFormat}"
+                        "type": "date",
+                        "format": "yyyy-MM-dd HH:mm:ss.SSSSSS||yyyy-MM-dd HH:mm:ss"
                     }, {
                     "${OpenSearchPriceField}": {
                         "type": "double"
+                    }, {
+                    "${OpenSearchDateField}" : {
+                        "type": "date",
+                        "format": "epoch_millis"
                     }
                 }
             }
