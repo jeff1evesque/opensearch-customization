@@ -34,15 +34,6 @@ OpenSearchConfigurationFunction:
         Runtime: !Ref Runtime
         Timeout: !Ref Timeout
 
-OpenSearchConfigurationPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-        FunctionName: !GetAtt OpenSearchConfigurationFunction.Arn
-        Action: lambda:InvokeFunction
-        Principal: s3.amazonaws.com
-        SourceAccount: !Ref AWS::AccountId
-        SourceArn: !Sub arn:aws:s3:::${DeployBucket}
-
 OpenSearchConfiguration:
     Type: Custom::OpenSearchConfigure
     Properties:
@@ -83,15 +74,6 @@ OpenSearchConfigurationFunction:
         Role: !GetAtt OpenSearchConfigurationExecutionRole.Arn
         Runtime: !Ref Runtime
         Timeout: !Ref Timeout
-
-OpenSearchConfigurationPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-        FunctionName: !GetAtt OpenSearchConfigurationFunction.Arn
-        Action: lambda:InvokeFunction
-        Principal: s3.amazonaws.com
-        SourceAccount: !Ref AWS::AccountId
-        SourceArn: !Sub arn:aws:s3:::${DeployBucket}
 
 OpenSearchConfiguration:
     Type: Custom::OpenSearchConfigure
