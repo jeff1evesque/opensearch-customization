@@ -313,15 +313,13 @@ def set_monitor(
     query_size=0,
     schedule_interval=5,
     schedule_unit='MINUTES',
-    post_date_from='{{period_end}}||-1d',
-    post_date_to='{{period_end}}',
+    post_date_from='||-1d',
+    post_date_to='',
     post_date_include_lower='true',
     post_date_include_upper='true',
     post_date_format='epoch_millis',
-    post_date_boost=1.0,
     adjust_pure_negative='true',
     monitor_query_terms={},
-    boost=1.0,
     aggregations={},
     trigger_name=None,
     trigger_severity='1',
@@ -344,6 +342,7 @@ def set_monitor(
             'status': ['fail'],
             'boost': 1
         }
+
     @trigger_condition_source, the condition will be applied to the ctx.results,
         which is a byproduct of the 'monitor_query_terms' (acting as a filter)
 
@@ -372,20 +371,18 @@ def set_monitor(
                             'bool': {
                                 'filter': [{
                                     'range': {
-                                        'post_date': {
+                                        'order_date': {
                                             'from': post_date_from,
                                             'to': post_date_to,
                                             'include_lower': post_date_include_lower,
                                             'include_upper': post_date_include_upper,
-                                            'format': post_date_format,
-                                            'boost': post_date_boost
+                                            'format': post_date_format
                                         }
                                     }
-                                }],
-                                'adjust_pure_negative': adjust_pure_negative,
-                                'boost': boost
-                            },
-                            'terms': monitor_query_terms
+                                }, {
+                                    "terms": monitor_query_terms
+                                }]
+                            }
                         },
                         'aggregations': aggregations
                     }
