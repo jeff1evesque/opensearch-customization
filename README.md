@@ -44,7 +44,7 @@ OpenSearchConfiguration:
         SnsAlertName: !Ref OpenSearchIndex
         SnsTopicArn: !GetAtt OpenSearchConfigurationNotification.Outputs.NestedSnsTopicArn
         SnsRoleArn: !GetAtt OpenSearchConfigurationRole.Arn
-    DependsOn: [OpenSearch, OpenSearchConfigurationNotification]
+    DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
 ## Create Mapping
@@ -94,7 +94,7 @@ OpenSearchConfiguration:
                     }
                 }
             }
-    DependsOn: [OpenSearch, OpenSearchConfigurationNotification]
+    DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
 ## Helper Functions
