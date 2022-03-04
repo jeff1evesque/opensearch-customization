@@ -4,6 +4,7 @@ This [lambda function](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 
 - [configure alerting](https://github.com/jeff1evesque/opensearch_customization#configure-alerting): using SNS topic
 - [create mapping](https://github.com/jeff1evesque/opensearch_customization#create-mapping): define field types, such as `double`, [`datetime`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#datetime), and more
+- [initialize dashboard](https://github.com/jeff1evesque/opensearch_customization#initialize-dashboard): initializes an empty [OpenSearch Dashboard](https://opensearch.org/docs/1.1/dashboards/index/) by creating a required [Index Pattern](https://www.elastic.co/guide/en/kibana/current/index-patterns-api-create.html) if not exists
 - [helper functions](https://github.com/jeff1evesque/opensearch_customization#helper-functions): the overall codebase has defined numerous get/set/delete functions that can be invoked as desired to satisfy requirements beyond configuring alerting, or creating mapping
 
 In general, this function can be executed ad-hoc, or as a [custom resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html) invoked by CloudFormation or Terraform. While below will emphasize on CloudFormation, Terraform variation via [`aws_cloudformation_stack`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack), or [custom providers](https://www.terraform.io/plugin) are left as an exercise.
@@ -114,6 +115,46 @@ OpenSearchConfiguration:
                     }
                 }
             }
+    DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
+```
+
+## Initialize Dashboard
+
+While it's possible to fully automate the creation of visualizations, and likely subsequent attachment to desired dashboard(s), this codebase prefers a more minimalist approach. Specifically, any small change in a visualization can easily become many magnitudes complicated for automation. Rather, this codebase setups up a default Index Pattern if one does not exist for a specified Index. Using the Index Pattern, an OpenSearch Dashboard is then created. The provided [`lambda.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/lambda.py) creates an empty dashboard by default:
+
+```python
+if initialize_dashboard:
+    #
+    # create index pattern: used by dashboard
+    #
+    index_id = index.replace('*', '').rstrip('-').rstrip('_')
+    r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+
+    if r != index_id:
+        set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+
+    #
+    # create dashboard: if index and index pattern exists
+    #
+    if (
+        check_index(endpoint, awsauth, index) and
+        check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
+        not check_dashboard(endpoint, awsauth, index)
+    ):
+        set_dashboard(endpoint, awsauth, index)
+```
+
+To turn-off this functionality, provide the `InitializeDashboard` parameter:
+
+```yaml
+OpenSearchConfiguration:
+    Type: Custom::OpenSearchConfigure
+    Properties:
+        ServiceToken: !GetAtt OpenSearchConfigurationFunction.Arn
+        Region: !Ref AWS::Region
+        OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
+        OpenSearchIndex: !Ref OpenSearchIndex
+        InitalizeDashboard: false
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
