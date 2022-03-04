@@ -181,6 +181,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         monitor_interval
     )). strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
+    initialize_dashboard     = bool(json.loads(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
     executions               = []
 
     response_sns_destination = None
@@ -280,24 +281,25 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     mappings=mappings
                 )
 
-        #
-        # create index pattern: used by dashboard
-        #
-        index_id = index.replace('*', '').rstrip('-').rstrip('_')
-        r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+        if initialize_dashboard:
+            #
+            # create index pattern: used by dashboard
+            #
+            index_id = index.replace('*', '').rstrip('-').rstrip('_')
+            r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-        if r != index_id:
-            set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+            if r != index_id:
+                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-        #
-        # create dashboard: if index and index pattern exists
-        #
-        if (
-            check_index(endpoint, awsauth, index) and
-            check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
-            not check_dashboard(endpoint, awsauth, index)
-        ):
-            set_dashboard(endpoint, awsauth, index)
+            #
+            # create dashboard: if index and index pattern exists
+            #
+            if (
+                check_index(endpoint, awsauth, index) and
+                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
+                not check_dashboard(endpoint, awsauth, index)
+            ):
+                set_dashboard(endpoint, awsauth, index)
 
     elif request_type == 'Update':
         #
@@ -360,23 +362,24 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 trigger_action_message=monitor_trigger_message
             )
 
-        #
-        # create index pattern: used by dashboard
-        #
-        index_id = index.replace('*', '').rstrip('-').rstrip('_')
-        r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+        if initialize_dashboard:
+            #
+            # create index pattern: used by dashboard
+            #
+            index_id = index.replace('*', '').rstrip('-').rstrip('_')
+            r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-        if r != index_id:
-            set_index_pattern(endpoint, awsauth, index_id=index_id, title=index, update=True)
+            if r != index_id:
+                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index, update=True)
 
-        #
-        # create dashboard: if index and index pattern exists
-        #
-        if (
-            check_index(endpoint, awsauth, index) and
-            check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
-        ):
-            set_dashboard(endpoint, awsauth, index, update=True)
+            #
+            # create dashboard: if index and index pattern exists
+            #
+            if (
+                check_index(endpoint, awsauth, index) and
+                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+            ):
+                set_dashboard(endpoint, awsauth, index, update=True)
 
     elif request_type == 'Delete':
         pass
