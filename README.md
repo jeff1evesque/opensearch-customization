@@ -3,7 +3,7 @@
 This [lambda function](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) is intended to configure an [OpenSearch cluster](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html), beyond what is natively exposed/available through cloud provisioning frameworks:
 
 - [configure alerting](https://github.com/jeff1evesque/opensearch_customization#configure-alerting): using SNS topic
-- [create mapping](https://github.com/jeff1evesque/opensearch_customization#create-mapping): define field types, such as `double`, [`datetime`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#datetime), and more
+- [create mapping](https://github.com/jeff1evesque/opensearch_customization#create-mapping): define field types, such as `double`, [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date), and more
 - [initialize dashboard](https://github.com/jeff1evesque/opensearch_customization#initialize-dashboard): initializes an empty [OpenSearch Dashboard](https://opensearch.org/docs/1.1/dashboards/index/) by creating a required [Index Pattern](https://www.elastic.co/guide/en/kibana/current/index-patterns-api-create.html) if not exists
 - [helper functions](https://github.com/jeff1evesque/opensearch_customization#helper-functions): the overall codebase has defined numerous get/set/delete functions that can be invoked as desired to satisfy requirements beyond configuring alerting, or creating mapping
 
