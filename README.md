@@ -68,7 +68,7 @@ OpenSearchConfiguration:
 
 An OpenSearch cluster can be defined via CloudFormation using the [`AWS::OpenSearchService::Domain`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-opensearchservice-domain.html). However, there are no attributes that allow index fields to be specified. This can be problematic, since all fields will default as a `string` type, preventing the ability to create [time-based visualizations](https://www.elastic.co/guide/en/kibana/current/tsvb.html) within [OpenSearch Dashboards](https://opensearch.org/docs/latest/dashboards/index/).
 
-The following example shows how to define a [`datetime`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#datetime) type field, thus opening the ability to configure time-based visualizations.
+The following example shows how to define a [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date) type field, thus opening the ability to configure time-based visualizations.
 
 ```yaml
 OpenSearchConfigurationFunction:
