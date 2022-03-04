@@ -166,6 +166,20 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     sns_alert_name           = properties.get('SnsAlertName', ''). strip()
     sns_topic_arn            = properties.get('SnsTopicArn', ''). strip()
     sns_role_arn             = properties.get('SnsRoleArn', ''). strip()
+    monitor_name             = properties.get('MonitorName', ''). strip()
+    monitor_interval         = int(properties.get('MonitorInterval', '5'). strip())
+    monitor_unit             = properties.get('MonitorUnit', 'MINUTES'). strip()
+    monitor_condition        = properties.get('MonitorCondition', 'ctx.results[0].hits.total.value > 5'). strip()
+    monitor_range_field      = properties.get('MonitorRangeField', 'timestamp'). strip()
+    monitor_range_from       = properties.get('MonitorRangeFrom', 'now-1h'). strip()
+    monitor_range_to         = properties.get('MonitorRangeTo', 'now'). strip()
+    monitor_query_terms      = json.loads(properties.get('MonitorQueryTerms', '{}'). strip())
+    monitor_trigger_subject  = properties.get('MonitorTriggerSubject', 'Monitor Triggered'). strip()
+    monitor_trigger_message  = properties.get('MonitorTriggerMessage', 'Monitor detected {} satisfying {} within {}'.format(
+        monitor_query_terms,
+        monitor_condition,
+        monitor_interval
+    )). strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
     executions               = []
 
@@ -233,6 +247,26 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
                 executions.append(False)
 
+        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
+
+        if monitor name and destination_id and index:
+            set_monitor(
+                endpoint,
+                awsauth,
+                monitor_name,
+                destination_id=destination_id,
+                indices=[index],
+                schedule_interval=monitor_interval,
+                schedule_unit=monitor_unit,
+                post_date_field=monitor_range_field,
+                post_date_from=monitor_range_from,
+                post_date_to=monitor_range_to,
+                monitor_query_terms=monitor_query_terms,
+                trigger_condition_source=monitor_condition,
+                trigger_action_subject=monitor_trigger_subject,
+                trigger_action_message=monitor_trigger_message
+            )
+
         #
         # reindex: using index field mapping
         #
@@ -298,6 +332,33 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
                 executions.append(False)
+
+        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
+
+        if monitor name and destination_id and index:
+            monitor_id = ''
+            monitor = get_monitor(endpoint, awsauth, monitor_name)
+
+            if 'hits' in monitor and 'hits' in monitor['hits']:
+                monitor_id = monitor['hits']['hits'][0]['_index']
+
+            set_monitor(
+                endpoint,
+                awsauth,
+                monitor_name,
+                destination_id=destination_id,
+                monitor_id=monitor_id,
+                indices=[index],
+                schedule_interval=monitor_interval,
+                schedule_unit=monitor_unit,
+                post_date_field=monitor_range_field,
+                post_date_from=monitor_range_from,
+                post_date_to=monitor_range_to,
+                monitor_query_terms=monitor_query_terms,
+                trigger_condition_source=monitor_condition,
+                trigger_action_subject=monitor_trigger_subject,
+                trigger_action_message=monitor_trigger_message
+            )
 
         #
         # create index pattern: used by dashboard
@@ -391,6 +452,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             return {
                 'response_sns_destination': response_sns_destination
             }
+
 
 if __name__ == '__main__':
     lambda_handler()

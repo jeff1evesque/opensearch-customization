@@ -313,8 +313,9 @@ def set_monitor(
     query_size=0,
     schedule_interval=5,
     schedule_unit='MINUTES',
-    post_date_from='||-1d',
-    post_date_to='',
+    post_date_field='timestamp',
+    post_date_from='now-1h',
+    post_date_to='now',
     post_date_include_lower='true',
     post_date_include_upper='true',
     post_date_format='epoch_millis',
@@ -325,9 +326,13 @@ def set_monitor(
     trigger_severity='1',
     trigger_condition_source='ctx.results[0].hits.total.value > 5',
     trigger_action_name=None,
-    trigger_action_message=None,
+    trigger_action_subject='Monitor Triggered',
+    trigger_action_message='Monitor detected {} satisfying {} within {}'.format(
+        monitor_query_terms,
+        trigger_condition_source,
+        schedule_interval
+    )). strip(),
     trigger_action_throttle_enabled='false',
-    trigger_action_subject='',
     headers=json.loads(os.getenv('Headers', '{"Content-Type": "application/json"}').strip())
 ):
     '''
@@ -371,9 +376,9 @@ def set_monitor(
                             'bool': {
                                 'filter': [{
                                     'range': {
-                                        'order_date': {
-                                            'from': post_date_from,
-                                            'to': post_date_to,
+                                        post_date_field: {
+                                            'gte': post_date_from,
+                                            'lt': post_date_to,
                                             'include_lower': post_date_include_lower,
                                             'include_upper': post_date_include_upper,
                                             'format': post_date_format
@@ -401,11 +406,11 @@ def set_monitor(
                     'name': trigger_action_name if trigger_action_name else monitor_name,
                     'destination_id': destination_id,
                     'message_template': {
-                        'source': trigger_action_message if trigger_action_message else ''
+                        'source': trigger_action_message
                     },
                     'throttle_enabled': trigger_action_throttle_enabled,
                     'subject_template': {
-                        'source': trigger_action_subject if trigger_action_subject else ''
+                        'source': trigger_action_subject
                     }
                 }]
             }]
