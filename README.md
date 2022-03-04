@@ -44,6 +44,22 @@ OpenSearchConfiguration:
         SnsAlertName: !Ref OpenSearchIndex
         SnsTopicArn: !GetAtt OpenSearchConfigurationNotification.Outputs.NestedSnsTopicArn
         SnsRoleArn: !GetAtt OpenSearchConfigurationRole.Arn
+        MonitorName: OverallFailures
+        MonitorInterval: !Ref OpenSearchMonitorInterval
+        MonitorUnit: !Ref OpenSearchMonitorUnit
+        MonitorCondition: !Ref OpenSearchMonitorCondition
+        MonitorRangeField: !Ref OpenSearchMonitorRangeField
+        MonitorRangeFrom: now-1h
+        MonitorRangeTo: now
+        MonitorQueryTerms: !Sub |
+            {
+                "${OpenSearchMonitorTerm}": ["${OpenSearchMonitorTermValue}"],
+                "boost": 1.0
+            }
+        MonitorTriggerSubject: !Sub ${OpenSearchIndex} detected ${OpenSearchMonitorTermValue}
+        MonitorTriggerMessage: !Sub |
+            specified ${OpenSearchMonitorTerm} detected ${OpenSearchMonitorTermValue}
+            satisfying ${OpenSearchMonitorCondition} within ${OpenSearchMonitorInterval} ${OpenSearchMonitorUnit}
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
