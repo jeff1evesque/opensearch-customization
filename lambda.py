@@ -181,7 +181,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         monitor_interval
     )). strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
-    initialize_dashboard     = bool(json.loads(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
+    initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
     executions               = []
 
     response_sns_destination = None
