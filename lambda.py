@@ -250,7 +250,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
 
         destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
 
-        if monitor name and destination_id and index:
+        if monitor_name and destination_id and index:
             set_monitor(
                 endpoint,
                 awsauth,
@@ -337,7 +337,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
 
         destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
 
-        if monitor name and destination_id and index:
+        if monitor_name and destination_id and index:
             monitor_id = ''
             monitor = get_monitor(endpoint, awsauth, monitor_name)
 
