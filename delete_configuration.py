@@ -49,7 +49,7 @@ def delete_document(
 
     delete index documents satisfying specified range
 
-    @range, object with the following structure
+    @index_range, object with the following structure
 
         {
             "timestamp": {
