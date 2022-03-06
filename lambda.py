@@ -21,7 +21,10 @@ from set_configuration import (
     set_dashboard,
     set_monitor
 )
-from delete_configuration import delete_index
+from delete_configuration import (
+    delete_index,
+    delete_document
+)
 
 
 def check_index(endpoint, awsauth, index):
@@ -182,6 +185,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     )). strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
     initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
+    document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}').strip())
     executions               = []
 
     response_sns_destination = None
