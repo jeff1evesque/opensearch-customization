@@ -5,6 +5,7 @@ This [lambda function](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 - [configure alerting](https://github.com/jeff1evesque/opensearch_customization#configure-alerting): using SNS topic
 - [create mapping](https://github.com/jeff1evesque/opensearch_customization#create-mapping): define field types, such as `double`, [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date), and more
 - [initialize dashboard](https://github.com/jeff1evesque/opensearch_customization#initialize-dashboard): initializes an empty [OpenSearch Dashboard](https://opensearch.org/docs/1.1/dashboards/index/) by creating a required [Index Pattern](https://www.elastic.co/guide/en/kibana/current/index-patterns-api-create.html) if not exists
+- [document deletion](https://github.com/jeff1evesque/opensearch_customization#document-deletion): specify documents within a date/time range using a `match` [query condition](https://opensearch.org/docs/latest/opensearch/rest-api/document-apis/delete-by-query/) to delete
 - [helper functions](https://github.com/jeff1evesque/opensearch_customization#helper-functions): the overall codebase has defined numerous get/set/delete functions that can be invoked as desired to satisfy requirements beyond configuring alerting, or creating mapping
 
 In general, this function can be executed ad-hoc, or as a [custom resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html) invoked by CloudFormation or Terraform. While below will emphasize on CloudFormation, Terraform variation via [`aws_cloudformation_stack`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack), or [custom providers](https://www.terraform.io/plugin) are left as an exercise.
@@ -157,6 +158,31 @@ OpenSearchConfiguration:
         InitalizeDashboard: false
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
+
+## Document Deletion
+
+It's possible to perform index rotation for an OpenSearch Index. However, this segment introduces the ability to delete documents within a specified index, if it satisfies a `match` [query condition](https://opensearch.org/docs/latest/opensearch/rest-api/document-apis/delete-by-query/). This can be particularly useful when only the latest N days of documents are required to be retained.  Consider the case of a producer sending data to a [Kinesis Stream](https://docs.aws.amazon.com/streams/latest/dev/introduction.html). This data stream could hypothetically be configured with a [Kinesis Firehose](https://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html) to buffer data into a datalake for long term storage.  However, the same data stream could be attached with an [event source mapping](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/integrations.html#integrations-kinesis) to an OpenSearch index. This allows the ability to keep the most recent data for visualization using OpenSearch Dashboard, while retaining the ability to perform historical analysis from the tangential datalake.
+
+The following example deletes all documents from a specified `OpenSearchIndex`, where a `timestamp` field from the index is older than 5 days:
+
+```yaml
+OpenSearchConfiguration:
+    Type: Custom::OpenSearchConfigure
+    Properties:
+        ServiceToken: !GetAtt OpenSearchConfigurationFunction.Arn
+        Region: !Ref AWS::Region
+        OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
+        OpenSearchIndex: !Ref OpenSearchIndex
+        DocumentDeleteRange: !Sub |
+            {
+                "timestamp": {
+                    "lte": "now-5d"
+                }
+            }
+    DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
+```
+
+*Note:* the above requires `timestamp` to be a [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date) field.
 
 ## Helper Functions
 
