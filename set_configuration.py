@@ -385,7 +385,7 @@ def set_monitor(
                                         }
                                     }
                                 }, {
-                                    "terms": monitor_query_terms
+                                    'terms': monitor_query_terms
                                 }]
                             }
                         },

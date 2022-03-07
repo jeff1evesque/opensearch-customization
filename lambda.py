@@ -21,7 +21,10 @@ from set_configuration import (
     set_dashboard,
     set_monitor
 )
-from delete_configuration import delete_index
+from delete_configuration import (
+    delete_index,
+    delete_document
+)
 
 
 def check_index(endpoint, awsauth, index):
@@ -182,6 +185,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     )). strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
     initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
+    document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}').strip())
     executions               = []
 
     response_sns_destination = None
@@ -248,8 +252,16 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
                 executions.append(False)
 
-        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
+        ##
+        ## delete document: using provided range
+        ##
+        if document_delete_range:
+            delete_document(endpoint, awsauth, index, document_delete_range)
 
+        ##
+        ## monitor: used to setup alerting using exist sns topic
+        ##
+        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
         if monitor_name and destination_id and index:
             set_monitor(
                 endpoint,
@@ -335,8 +347,16 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
                 executions.append(False)
 
-        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
+        ##
+        ## delete document: using provided range
+        ##
+        if document_delete_range:
+            delete_document(endpoint, awsauth, index, document_delete_range)
 
+        ##
+        ## monitor: used to setup alerting using exist sns topic
+        ##
+        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
         if monitor_name and destination_id and index:
             monitor_id = ''
             monitor = get_monitor(endpoint, awsauth, monitor_name)
