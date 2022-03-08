@@ -206,7 +206,10 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
 
     except Exception as e:
         print('Error (AWS4Auth): {}'.format(str(e)))
-        return False
+        print('Notice: changing {} request_type to {} to skip logic'.format(
+            request_type,
+            None
+        ))
 
     #
     # x-ray tracing
@@ -240,12 +243,6 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         sns_role_arn
                     )
 
-                    destination = get_alert_destination(
-                        endpoint,
-                        awsauth,
-                        sns_alert_name
-                    )
-
                 executions.append(True if response_sns_destination else False)
 
             except Exception as e:
@@ -256,14 +253,15 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ## delete document: using provided range
         ##
         if document_delete_range:
-            delete_document(endpoint, awsauth, index, document_delete_range)
+            r = delete_document(endpoint, awsauth, index, document_delete_range)
+            executions.append(True if r else False)
 
         ##
         ## monitor: used to setup alerting using exist sns topic
         ##
         destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
         if monitor_name and destination_id and index:
-            set_monitor(
+            r = set_monitor(
                 endpoint,
                 awsauth,
                 monitor_name,
@@ -279,19 +277,24 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 trigger_action_subject=monitor_trigger_subject,
                 trigger_action_message=monitor_trigger_message
             )
+            executions.append(True if r else False)
 
         #
         # reindex: using index field mapping
         #
         if mappings:
             if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
-                remap_index(
+                r = remap_index(
                     endpoint,
                     awsauth,
                     '{}_temporary'.format(index),
                     index,
                     mappings=mappings
                 )
+                executions.append(True if r else False)
+
+            else:
+                executions.append(False)
 
         if initialize_dashboard:
             #
@@ -311,7 +314,11 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
                 not check_dashboard(endpoint, awsauth, index)
             ):
-                set_dashboard(endpoint, awsauth, index)
+                r = set_dashboard(endpoint, awsauth, index)
+                executions.append(True if r else False)
+
+            else:
+                executions.append(False)
 
     elif request_type == 'Update':
         #
@@ -335,12 +342,6 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         update=True
                     )
 
-                    destination = get_alert_destination(
-                        endpoint,
-                        awsauth,
-                        sns_alert_name
-                    )
-
                 executions.append(True if response_sns_destination else False)
 
             except Exception as e:
@@ -351,7 +352,8 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ## delete document: using provided range
         ##
         if document_delete_range:
-            delete_document(endpoint, awsauth, index, document_delete_range)
+            r = delete_document(endpoint, awsauth, index, document_delete_range)
+            executions.append(True if r else False)
 
         ##
         ## monitor: used to setup alerting using exist sns topic
@@ -364,7 +366,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             if 'hits' in monitor and 'hits' in monitor['hits']:
                 monitor_id = monitor['hits']['hits'][0]['_index']
 
-            set_monitor(
+            r = set_monitor(
                 endpoint,
                 awsauth,
                 monitor_name,
@@ -381,6 +383,8 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 trigger_action_subject=monitor_trigger_subject,
                 trigger_action_message=monitor_trigger_message
             )
+
+            executions.append(True if r else False)
 
         if initialize_dashboard:
             #
@@ -399,9 +403,14 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 check_index(endpoint, awsauth, index) and
                 check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
             ):
-                set_dashboard(endpoint, awsauth, index, update=True)
+                r = set_dashboard(endpoint, awsauth, index, update=True)
+                executions.append(True if r else False)
+
+            else:
+                executions.append(False)
 
     elif request_type == 'Delete':
+        executions.append(True)
         pass
 
     else:
