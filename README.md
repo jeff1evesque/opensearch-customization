@@ -191,7 +191,7 @@ using a [cron expression](https://docs.aws.amazon.com/AmazonCloudWatch/latest/ev
 OpenSearchDeleteDocumentRule:
     Type: AWS::Events::Rule
     Properties:
-        Name: !Sub ${FunctionNameProducer}DeleteIndexDocuments
+        Name: !Sub ${FunctionNameOpenSearchConfiguration}DeleteIndexDocuments
         Description: !Sub |
             trigger ${FunctionNameOpenSearchConfiguration} to delete index
             documents older than or equal to 30 days from now
