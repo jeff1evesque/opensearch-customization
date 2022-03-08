@@ -182,7 +182,48 @@ OpenSearchConfiguration:
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
-*Note:* the above requires `timestamp` to be a [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date) field.
+**Note:** the above requires `timestamp` to be a [`date`](https://opensearch.org/docs/latest/search-plugins/sql/datatypes/#date) field.
+
+The following CloudWatch [event rule](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/WhatIsCloudWatchEvents.html) triggers `OpenSearchConfigurationFunction`
+using a [cron expression](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions):
+
+```yaml
+OpenSearchDeleteDocumentRule:
+    Type: AWS::Events::Rule
+    Properties:
+        Name: !Sub ${FunctionNameProducer}DeleteIndexDocuments
+        Description: !Sub |
+            trigger ${FunctionNameOpenSearchConfiguration} to delete index
+            documents older than or equal to 30 days from now
+        ScheduleExpression: cron(0 4 * * ? *)
+        State: !Ref EnableEventRules
+        Targets:
+          - Id: OpenSearchDeleteDocumentRule
+            Arn: !GetAtt OpenSearchConfigurationFunction.Arn
+            Input: !Sub |
+                {
+                    "RequestType": "Create",
+                    "ResourceProperties": {
+                        "OpenSearchDomain": "https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}",
+                        "OpenSearchIndex": "${OpenSearchIndex}",
+                        "DocumentDeleteRange": {
+                            "utc.message": { "lte": "now-30d" }
+                        }
+                    }
+                }
+            RetryPolicy:
+                MaximumEventAgeInSeconds: !Ref MaximumEventAgeInSeconds
+                MaximumRetryAttempts: !Ref MaximumRetryAttempts
+    DependsOn: [OpenSearchConfigurationFunction, OpenSearchConfiguration]
+
+PermissionForEventsToInvokeLambda:
+     Type: AWS::Lambda::Permission
+     Properties:
+         FunctionName: !Ref OpenSearchConfigurationFunction
+         Action: lambda:InvokeFunction
+         Principal: events.amazonaws.com
+         SourceArn: !GetAtt OpenSearchDeleteDocumentRule.Arn
+```
 
 ## Helper Functions
 
