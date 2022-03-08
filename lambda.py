@@ -210,6 +210,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             request_type,
             None
         ))
+        request_type = None
 
     #
     # x-ray tracing
