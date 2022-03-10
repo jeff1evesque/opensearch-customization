@@ -188,8 +188,6 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}').strip())
     executions               = []
 
-    response_sns_destination = None
-
     #
     # version 4 authentication for the python requests
     #
@@ -236,7 +234,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 )
 
                 if not destination:
-                    response_sns_destination = set_alert_destination(
+                    r = set_alert_destination(
                         endpoint,
                         awsauth,
                         sns_alert_name,
@@ -244,7 +242,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         sns_role_arn
                     )
 
-                executions.append(True if response_sns_destination else False)
+                executions.append(True if r else False)
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
@@ -334,7 +332,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 )
 
                 if not destination:
-                    response_sns_destination = set_alert_destination(
+                    r = set_alert_destination(
                         endpoint,
                         awsauth,
                         sns_alert_name,
@@ -343,7 +341,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         update=True
                     )
 
-                executions.append(True if response_sns_destination else False)
+                executions.append(True if r else False)
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
