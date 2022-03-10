@@ -443,14 +443,10 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         response_body['NoEcho'] = noEcho
 
         if request_type == 'Create' or request_type == 'Update':
-            response_body['Data'] = {
-                'response_sns_destination': response_sns_destination
-            }
+            response_body['Data'] = {}
 
         else:
-            response_body['Data'] = {
-                'response_sns_destination': response_sns_destination
-            }
+            response_body['Data'] = {}
 
         response_json = json.dumps(response_body)
 
@@ -477,14 +473,11 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     #
     else:
         if request_type == 'Create' or request_type == 'Update':
-            return {
-                'response_sns_destination': response_sns_destination
-            }
 
-        else:
-            return {
-                'response_sns_destination': response_sns_destination
-            }
+            if all(x for x in executions):
+                return True
+
+            return False
 
 
 if __name__ == '__main__':
