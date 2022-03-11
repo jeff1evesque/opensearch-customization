@@ -115,41 +115,6 @@ def remap_index(
     return False
 
 
-def create_alarm(
-    endpoint,
-    awsauth,
-    monitor_name,
-    sns_alert_name,
-    indices,
-    trigger_action_message,
-    trigger_action_subject
-):
-    '''
-
-    create index monitoring alarm using provided 'destination_id', which
-    corresponds to an associated SNS topic
-
-    '''
-
-    monitor_id = ''
-    monitor = get_monitor(endpoint, awsauth, monitor_name)
-    destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
-
-    if 'hits' in monitor and 'hits' in monitor['hits']:
-        monitor_id = monitor['hits']['hits'][0]['_index']
-
-    return set_monitor(
-        endpoint,
-        awsauth,
-        monitor_name,
-        destination_id=destination_id,
-        monitor_id=monitor_id,
-        indices=indices,
-        trigger_action_name=trigger_action_message,
-        trigger_action_message=trigger_action_subject
-    )
-
-
 def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     '''
 
