@@ -53,11 +53,13 @@ OpenSearchConfiguration:
         MonitorRangeField: !Ref OpenSearchMonitorRangeField
         MonitorRangeFrom: now-1h
         MonitorRangeTo: now
-        MonitorQueryTerms: !Sub |
-            {
-                "${OpenSearchMonitorTerm}": ["${OpenSearchMonitorTermValue}"],
-                "boost": 1.0
-            }
+        MonitorQueryTerms: !Sub
+          - '{
+              "${OpenSearchMonitorTerm}": ["${OpenSearchMonitorTermValue}"],
+              "boost": 1.0
+            }'
+          - OpenSearchMonitorTerm: !Ref OpenSearchMonitorTerm
+            OpenSearchMonitorTermValue: !Ref OpenSearchMonitorTermValue
         MonitorTriggerSubject: !Sub ${OpenSearchIndex} detected ${OpenSearchMonitorTermValue}
         MonitorTriggerMessage: !Sub |
             specified ${OpenSearchMonitorTerm} detected ${OpenSearchMonitorTermValue}
@@ -100,22 +102,27 @@ OpenSearchConfiguration:
         Region: !Ref AWS::Region
         OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
         OpenSearchIndex: !Ref OpenSearchIndex
-        Mappings: !Sub |
-            {
+        Mappings: !Sub
+          - '{
                 "properties": {
                     "${OpenSearchTimeStampField}": {
                         "type": "date",
-                        "format": "yyyy-MM-dd HH:mm:ss.SSSSSS||yyyy-MM-dd HH:mm:ss"
+                        "format": "${OpenSearchTimeStampFieldFormat}"
                     }, {
                     "${OpenSearchPriceField}": {
                         "type": "double"
                     }, {
                     "${OpenSearchDateField}" : {
                         "type": "date",
-                        "format": "epoch_millis"
+                        "format": "${OpenSearchDateFieldFormat}"
                     }
                 }
-            }
+            }'
+          - OpenSearchTimeStampField: !Ref OpenSearchTimeStampField
+            OpenSearchTimeStampFieldFormat: !Ref OpenSearchTimeStampFieldFormat
+            OpenSearchPriceField: !Ref OpenSearchPriceField
+            OpenSearchDateField: !Ref OpenSearchDateField
+            OpenSearchDateFieldFormat: !Ref OpenSearchDateFieldFormat
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
@@ -173,12 +180,13 @@ OpenSearchConfiguration:
         Region: !Ref AWS::Region
         OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
         OpenSearchIndex: !Ref OpenSearchIndex
-        DocumentDeleteRange: !Sub |
-            {
-                "message.utc": {
-                    "lte": "now-5d"
-                }
-            }
+        DocumentDeleteRange: !Sub
+          - '{
+              "${OpenSearchMonitorTerm}": ["${OpenSearchMonitorTermValue}"],
+              "boost": 1.0
+            }'
+          - OpenSearchMonitorTerm: !Ref OpenSearchMonitorTerm
+            OpenSearchMonitorTermValue: !Ref OpenSearchMonitorTermValue
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
@@ -200,17 +208,20 @@ OpenSearchDeleteDocumentRule:
         Targets:
           - Id: OpenSearchDeleteDocumentRule
             Arn: !GetAtt OpenSearchConfigurationFunction.Arn
-            Input: !Sub |
-                {
+            Input: !Sub
+              - '{
                     "RequestType": "Create",
                     "ResourceProperties": {
-                        "OpenSearchDomain": "https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}",
+                        "OpenSearchDomain": "https://${OpenSearchDomain}",
                         "OpenSearchIndex": "${OpenSearchIndex}",
                         "DocumentDeleteRange": {
                             "message.utc": { "lte": "now-30d" }
                         }
                     }
-                }
+                }'
+              - OpenSearchDomain: !Sub OpenSearch.Outputs.NestedOpenSearchDomainEndpoint
+                OpenSearchIndex: !Ref OpenSearchIndex
+
             RetryPolicy:
                 MaximumEventAgeInSeconds: !Ref MaximumEventAgeInSeconds
                 MaximumRetryAttempts: !Ref MaximumRetryAttempts
