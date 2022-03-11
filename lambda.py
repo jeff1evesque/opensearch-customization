@@ -182,7 +182,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         monitor_query_terms,
         monitor_condition,
         monitor_interval
-    )). strip()
+    )).strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
     initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
     document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}').strip())
