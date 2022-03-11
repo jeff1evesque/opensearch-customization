@@ -331,7 +331,7 @@ def set_monitor(
         monitor_query_terms,
         trigger_condition_source,
         schedule_interval
-    )).strip(),
+    ),
     trigger_action_throttle_enabled='false',
     headers=json.loads(os.getenv('Headers', '{"Content-Type": "application/json"}').strip())
 ):
