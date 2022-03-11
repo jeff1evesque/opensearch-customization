@@ -327,11 +327,7 @@ def set_monitor(
     trigger_condition_source='ctx.results[0].hits.total.value > 5',
     trigger_action_name=None,
     trigger_action_subject='Monitor Triggered',
-    trigger_action_message='Monitor detected {} satisfying {} within {}'.format(
-        monitor_query_terms,
-        trigger_condition_source,
-        schedule_interval
-    ),
+    trigger_action_message='Monitor detected satisfying condition',
     trigger_action_throttle_enabled='false',
     headers=json.loads(os.getenv('Headers', '{"Content-Type": "application/json"}').strip())
 ):
