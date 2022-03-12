@@ -61,9 +61,17 @@ OpenSearchConfiguration:
           - OpenSearchMonitorTerm: !Ref OpenSearchMonitorTerm
             OpenSearchMonitorTermValue: !Ref OpenSearchMonitorTermValue
         MonitorTriggerSubject: !Sub ${OpenSearchIndex} detected ${OpenSearchMonitorTermValue}
-        MonitorTriggerMessage: !Sub |
+        MonitorTriggerMessage: !Sub
+          - '
             specified ${OpenSearchMonitorTerm} detected ${OpenSearchMonitorTermValue}
-            satisfying ${OpenSearchMonitorCondition} within ${OpenSearchMonitorInterval} ${OpenSearchMonitorUnit}
+            satisfying ${OpenSearchMonitorCondition} within ${OpenSearchMonitorInterval}
+            ${OpenSearchMonitorUnit}
+            '
+          - OpenSearchMonitorTerm: !Ref OpenSearchMonitorTerm
+            OpenSearchMonitorTermValue: !Ref OpenSearchMonitorTermValue
+            OpenSearchMonitorCondition: !Ref OpenSearchMonitorCondition
+            OpenSearchMonitorInterval: !Ref OpenSearchMonitorInterval
+            OpenSearchMonitorUnit: !Ref OpenSearchMonitorUnit
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
