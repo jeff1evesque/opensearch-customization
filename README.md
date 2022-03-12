@@ -116,10 +116,10 @@ OpenSearchConfiguration:
                     "${OpenSearchTimeStampField}": {
                         "type": "date",
                         "format": "${OpenSearchTimeStampFieldFormat}"
-                    }, {
+                    },
                     "${OpenSearchPriceField}": {
                         "type": "double"
-                    }, {
+                    },
                     "${OpenSearchDateField}" : {
                         "type": "date",
                         "format": "${OpenSearchDateFieldFormat}"
