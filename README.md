@@ -229,7 +229,6 @@ OpenSearchDeleteDocumentRule:
                 }'
               - OpenSearchDomain: !Sub OpenSearch.Outputs.NestedOpenSearchDomainEndpoint
                 OpenSearchIndex: !Ref OpenSearchIndex
-
             RetryPolicy:
                 MaximumEventAgeInSeconds: !Ref MaximumEventAgeInSeconds
                 MaximumRetryAttempts: !Ref MaximumRetryAttempts
