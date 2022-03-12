@@ -79,7 +79,7 @@ def remap_index(
     endpoint,
     awsauth,
     source_index,
-    destination_index,
+    destination_index=None,
     mappings={},
     retry=15,
     filter_header='index,docs.count'
@@ -98,21 +98,28 @@ def remap_index(
 
     '''
 
-    old_count = get_document_count(endpoint, awsauth, source_index, filter_header)
-    set_new_index(endpoint, awsauth, destination_index, mappings=mappings)
-    set_reindex(endpoint, awsauth, source_index, destination_index)
+    if reindex:
+        old_count = get_document_count(endpoint, awsauth, source_index, filter_header)
 
-    for x in range(1, retry + 1):
-        update_count = get_document_count(endpoint, awsauth, destination_index, filter_header)
-        if old_count and update_count and old_count == update_count:
-            delete_index(endpoint, awsauth, source_index)
-            print('Notice: old index {} deleted'.format(source_index))
-            return True
-        else:
-            time.sleep(pow(x, 2))
+        if old_count == 0:
+            if delete_index(endpoint, awsauth, source_index):
+                if set_new_index(endpoint, awsauth, source_index, mappings=mappings)
+                    return True
 
-    print('Error: old index {} not deleted'.format(source_index))
-    return False
+        elif old_count:
+            new_index = set_new_index(endpoint, awsauth, destination_index, mappings=mappings)
+            reindex = set_reindex(endpoint, awsauth, source_index, destination_index)
+
+            if old_count and new_index and reindex:
+                for x in range(1, retry + 1):
+                    update_count = get_document_count(endpoint, awsauth, destination_index, filter_header)
+                    if update_count and old_count == update_count:
+                        delete_index(endpoint, awsauth, source_index)
+                        return True
+                    else:
+                        time.sleep(pow(x, 2))
+
+        return False
 
 
 def lambda_handler(event, context, physicalResourceId=None, noEcho=False):

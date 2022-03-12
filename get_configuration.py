@@ -53,6 +53,10 @@ def get_document_count(endpoint, awsauth, index, filter_header=''):
     r = get_indices(endpoint, awsauth, filter_header)
     found_index = None
 
+    if not index:
+        print('Error (get_document_count): index not provided')
+        return False
+
     try:
         for x in r:
             row = x.split()
