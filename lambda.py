@@ -102,7 +102,7 @@ def remap_index(
 
     if old_count == 0:
         if delete_index(endpoint, awsauth, source_index):
-            if set_new_index(endpoint, awsauth, source_index, mappings=mappings)
+            if set_new_index(endpoint, awsauth, source_index, mappings=mappings):
                 return True
 
     elif old_count:
