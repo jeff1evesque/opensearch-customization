@@ -100,10 +100,9 @@ def remap_index(
 
     old_count = get_document_count(endpoint, awsauth, source_index, filter_header)
 
-    if old_count == 0:
-        if delete_index(endpoint, awsauth, source_index):
-            if set_new_index(endpoint, awsauth, source_index, mappings=mappings):
-                return True
+    if not old_count:
+        if set_new_index(endpoint, awsauth, source_index, mappings=mappings):
+            return True
 
     elif old_count:
         new_index = set_new_index(endpoint, awsauth, destination_index, mappings=mappings)
@@ -194,6 +193,47 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     #
     if request_type == 'Create':
         #
+        # reindex: using index field mapping
+        #
+        if mappings:
+            if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
+                r = remap_index(
+                    endpoint,
+                    awsauth,
+                    '{}_temporary'.format(index),
+                    index,
+                    mappings=mappings
+                )
+                executions.append(True if r else False)
+
+            else:
+                executions.append(False)
+
+        if initialize_dashboard:
+            #
+            # create index pattern: used by dashboard
+            #
+            index_id = index.replace('*', '').rstrip('-').rstrip('_')
+            r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+
+            if r != index_id:
+                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+
+            #
+            # create dashboard: if index and index pattern exists
+            #
+            if (
+                check_index(endpoint, awsauth, index) and
+                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
+                not check_dashboard(endpoint, awsauth, index)
+            ):
+                r = set_dashboard(endpoint, awsauth, index)
+                executions.append(True if r else False)
+
+            else:
+                executions.append(False)
+
+        #
         # sns destination
         #
         if sns_alert_name and sns_topic_arn and sns_role_arn:
@@ -250,22 +290,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             )
             executions.append(True if r else False)
 
-        #
-        # reindex: using index field mapping
-        #
-        if mappings:
-            if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
-                r = remap_index(
-                    endpoint,
-                    awsauth,
-                    '{}_temporary'.format(index),
-                    index,
-                    mappings=mappings
-                )
-                executions.append(True if r else False)
-
-            else:
-                executions.append(False)
+    elif request_type == 'Update':
 
         if initialize_dashboard:
             #
@@ -275,23 +300,21 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
             if r != index_id:
-                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index, update=True)
 
             #
             # create dashboard: if index and index pattern exists
             #
             if (
                 check_index(endpoint, awsauth, index) and
-                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index) and
-                not check_dashboard(endpoint, awsauth, index)
+                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
             ):
-                r = set_dashboard(endpoint, awsauth, index)
+                r = set_dashboard(endpoint, awsauth, index, update=True)
                 executions.append(True if r else False)
 
             else:
                 executions.append(False)
 
-    elif request_type == 'Update':
         #
         # sns destination
         #
@@ -357,29 +380,6 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             )
 
             executions.append(True if r else False)
-
-        if initialize_dashboard:
-            #
-            # create index pattern: used by dashboard
-            #
-            index_id = index.replace('*', '').rstrip('-').rstrip('_')
-            r = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
-
-            if r != index_id:
-                set_index_pattern(endpoint, awsauth, index_id=index_id, title=index, update=True)
-
-            #
-            # create dashboard: if index and index pattern exists
-            #
-            if (
-                check_index(endpoint, awsauth, index) and
-                check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
-            ):
-                r = set_dashboard(endpoint, awsauth, index, update=True)
-                executions.append(True if r else False)
-
-            else:
-                executions.append(False)
 
     elif request_type == 'Delete':
         executions.append(True)
