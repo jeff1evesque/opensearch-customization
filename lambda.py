@@ -198,6 +198,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     sns_alert_name
                 )
 
+                r = None
                 if not destination:
                     r = set_alert_destination(
                         endpoint,
@@ -296,6 +297,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     sns_alert_name
                 )
 
+                r = None
                 if not destination:
                     r = set_alert_destination(
                         endpoint,
