@@ -117,6 +117,8 @@ def remap_index(
                 else:
                     time.sleep(pow(x, 2))
 
+    print('Notice (remap_index): neither reindex action implemented')
+
     return False
 
 
@@ -196,18 +198,23 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         # reindex: using index field mapping
         #
         if mappings:
-            if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
-                r = remap_index(
-                    endpoint,
-                    awsauth,
-                    '{}_temporary'.format(index),
-                    index,
-                    mappings=mappings
-                )
-                executions.append(True if r else False)
+            if get_document_count(endpoint, awsauth, source_index, 'index,docs.count'):
+                if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
+                    r = remap_index(
+                        endpoint,
+                        awsauth,
+                        '{}_temporary'.format(index),
+                        index,
+                        mappings=mappings
+                    )
+                    executions.append(True if r else False)
+
+                else:
+                    executions.append(False)
 
             else:
-                executions.append(False)
+                r = remap_index(endpoint, awsauth, index)
+                executions.append(True if r else False)
 
         if initialize_dashboard:
             #
@@ -270,25 +277,27 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ##
         ## monitor: used to setup alerting using exist sns topic
         ##
-        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
-        if monitor_name and destination_id and index:
-            r = set_monitor(
-                endpoint,
-                awsauth,
-                monitor_name,
-                destination_id=destination_id,
-                indices=[index],
-                schedule_interval=monitor_interval,
-                schedule_unit=monitor_unit,
-                post_date_field=monitor_range_field,
-                post_date_from=monitor_range_from,
-                post_date_to=monitor_range_to,
-                monitor_query_terms=monitor_query_terms,
-                trigger_condition_source=monitor_condition,
-                trigger_action_subject=monitor_trigger_subject,
-                trigger_action_message=monitor_trigger_message
-            )
-            executions.append(True if r else False)
+        if monitor_name and sns_alert_name and index:
+            destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
+
+            if destination_id:
+                r = set_monitor(
+                    endpoint,
+                    awsauth,
+                    monitor_name,
+                    destination_id=destination_id,
+                    indices=[index],
+                    schedule_interval=monitor_interval,
+                    schedule_unit=monitor_unit,
+                    post_date_field=monitor_range_field,
+                    post_date_from=monitor_range_from,
+                    post_date_to=monitor_range_to,
+                    monitor_query_terms=monitor_query_terms,
+                    trigger_condition_source=monitor_condition,
+                    trigger_action_subject=monitor_trigger_subject,
+                    trigger_action_message=monitor_trigger_message
+                )
+                executions.append(True if r else False)
 
     elif request_type == 'Update':
 
@@ -353,33 +362,35 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ##
         ## monitor: used to setup alerting using exist sns topic
         ##
-        destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
-        if monitor_name and destination_id and index:
-            monitor_id = ''
-            monitor = get_monitor(endpoint, awsauth, monitor_name)
+        if monitor_name and sns_alert_name and index:
+            destination_id = get_alert_destination(endpoint, awsauth, sns_alert_name)
 
-            if 'hits' in monitor and 'hits' in monitor['hits']:
-                monitor_id = monitor['hits']['hits'][0]['_index']
+            if destination_id:
+                monitor_id = ''
+                monitor = get_monitor(endpoint, awsauth, monitor_name)
 
-            r = set_monitor(
-                endpoint,
-                awsauth,
-                monitor_name,
-                destination_id=destination_id,
-                monitor_id=monitor_id,
-                indices=[index],
-                schedule_interval=monitor_interval,
-                schedule_unit=monitor_unit,
-                post_date_field=monitor_range_field,
-                post_date_from=monitor_range_from,
-                post_date_to=monitor_range_to,
-                monitor_query_terms=monitor_query_terms,
-                trigger_condition_source=monitor_condition,
-                trigger_action_subject=monitor_trigger_subject,
-                trigger_action_message=monitor_trigger_message
-            )
+                if 'hits' in monitor and 'hits' in monitor['hits']:
+                    monitor_id = monitor['hits']['hits'][0]['_index']
 
-            executions.append(True if r else False)
+                r = set_monitor(
+                    endpoint,
+                    awsauth,
+                    monitor_name,
+                    destination_id=destination_id,
+                    monitor_id=monitor_id,
+                    indices=[index],
+                    schedule_interval=monitor_interval,
+                    schedule_unit=monitor_unit,
+                    post_date_field=monitor_range_field,
+                    post_date_from=monitor_range_from,
+                    post_date_to=monitor_range_to,
+                    monitor_query_terms=monitor_query_terms,
+                    trigger_condition_source=monitor_condition,
+                    trigger_action_subject=monitor_trigger_subject,
+                    trigger_action_message=monitor_trigger_message
+                )
+
+                executions.append(True if r else False)
 
     elif request_type == 'Delete':
         executions.append(True)
@@ -414,10 +425,10 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         response_body['NoEcho'] = noEcho
 
         if request_type == 'Create' or request_type == 'Update':
-            response_body['Data'] = {}
+            response_body['Data'] = {'executions': executions}
 
         else:
-            response_body['Data'] = {}
+            response_body['Data'] = {'executions': executions}
 
         response_json = json.dumps(response_body)
 
