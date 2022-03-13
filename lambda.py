@@ -198,7 +198,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         # reindex: using index field mapping
         #
         if mappings:
-            if get_document_count(endpoint, awsauth, source_index, 'index,docs.count'):
+            if get_document_count(endpoint, awsauth, index, 'index,docs.count'):
                 if remap_index(endpoint, awsauth, index, '{}_temporary'.format(index)):
                     r = remap_index(
                         endpoint,
@@ -214,7 +214,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
 
             else:
                 r = remap_index(endpoint, awsauth, index)
-                executions.append(True if r else False)
+                executions.append({'reindex': True} if r else {'reindex': False})
 
         if initialize_dashboard:
             #
@@ -235,10 +235,10 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 not check_dashboard(endpoint, awsauth, index)
             ):
                 r = set_dashboard(endpoint, awsauth, index)
-                executions.append(True if r else False)
+                executions.append({'dashboard': True} if r else {'dashboard': False})
 
             else:
-                executions.append(False)
+                executions.append({'dashboard': False})
 
         #
         # sns destination
@@ -261,18 +261,18 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         sns_role_arn
                     )
 
-                executions.append(True if r else False)
+                executions.append({'destination': True} if r else {'destination': False})
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
-                executions.append(False)
+                executions.append({'destination': False})
 
         ##
         ## delete document: using provided range
         ##
         if document_delete_range:
             r = delete_document(endpoint, awsauth, index, document_delete_range)
-            executions.append(True if r else False)
+            executions.append({'delete': True} if r else {'delete': False})
 
         ##
         ## monitor: used to setup alerting using exist sns topic
@@ -297,7 +297,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     trigger_action_subject=monitor_trigger_subject,
                     trigger_action_message=monitor_trigger_message
                 )
-                executions.append(True if r else False)
+                executions.append({'alert': True} if r else {'alert': False})
 
     elif request_type == 'Update':
 
@@ -319,10 +319,10 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
             ):
                 r = set_dashboard(endpoint, awsauth, index, update=True)
-                executions.append(True if r else False)
+                executions.append({'dashboard': True} if r else {'dashboard': False})
 
             else:
-                executions.append(False)
+                executions.append({'dashboard': False})
 
         #
         # sns destination
@@ -346,18 +346,18 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         update=True
                     )
 
-                executions.append(True if r else False)
+                executions.append({'destination': True} if r else {'destination': False})
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
-                executions.append(False)
+                executions.append({'destination': False})
 
         ##
         ## delete document: using provided range
         ##
         if document_delete_range:
             r = delete_document(endpoint, awsauth, index, document_delete_range)
-            executions.append(True if r else False)
+            executions.append({'delete': True} if r else {'delete': False})
 
         ##
         ## monitor: used to setup alerting using exist sns topic
@@ -389,8 +389,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     trigger_action_subject=monitor_trigger_subject,
                     trigger_action_message=monitor_trigger_message
                 )
-
-                executions.append(True if r else False)
+                executions.append({'alert': True} if r else {'alert': False})
 
     elif request_type == 'Delete':
         executions.append(True)
@@ -408,8 +407,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         print(response_url)
 
         response_body = {}
-
-        if all(x for x in executions):
+        if all(list(y.values())[0] for y in [x for x in executions]):
             response_body['Status'] = 'SUCCESS'
         else:
             response_body['Status'] = 'FAILED'
@@ -455,10 +453,8 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     #
     else:
         if request_type == 'Create' or request_type == 'Update':
-
-            if all(x for x in executions):
+            if all(list(y.values())[0] for y in [x for x in executions]):
                 return True
-
             return False
 
 
