@@ -455,6 +455,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     # return condition: lambda invoked by something else
     #
     else:
+        print('Notice: overall execution {}'.format(executions))
         if request_type == 'Create' or request_type == 'Update':
             if all(list(y.values())[0] for y in [x for x in executions]):
                 return True
