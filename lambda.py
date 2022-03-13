@@ -214,24 +214,25 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
 
             else:
                 r = remap_index(endpoint, awsauth, index)
-                executions.append({'reindex': True} if r else {'reindex': False})
+                executions.append({'set_reindex': True} if r else {'set_reindex': False})
 
         if initialize_dashboard:
             #
             # create index pattern: used by dashboard
             #
             index_id = index.replace('*', '').rstrip('-').rstrip('_')
-            current_index = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+            current_id = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-            if current_index != index_id:
+            if current_id != index_id:
                 r = set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+                current_id = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
                 executions.append({'set_index_pattern': True} if r else {'set_index_pattern': False})
 
             #
             # create dashboard: if index and index pattern exists
             #
             if (
-                current_index and
+                current_id and
                 check_index(endpoint, awsauth, index) and
                 not check_dashboard(endpoint, awsauth, index)
             ):
@@ -262,11 +263,11 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         sns_role_arn
                     )
 
-                executions.append({'destination': True} if r else {'destination': False})
+                executions.append({'set_destination': True} if r else {'set_destination': False})
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
-                executions.append({'destination': False})
+                executions.append({'set_destination': False})
 
         ##
         ## delete document: using provided range
@@ -298,7 +299,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     trigger_action_subject=monitor_trigger_subject,
                     trigger_action_message=monitor_trigger_message
                 )
-                executions.append({'alert': True} if r else {'alert': False})
+                executions.append({'set_alert': True} if r else {'set_alert': False})
 
     elif request_type == 'Update':
         if initialize_dashboard:
@@ -306,17 +307,18 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             # create index pattern: used by dashboard
             #
             index_id = index.replace('*', '').rstrip('-').rstrip('_')
-            current_index = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+            current_id = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-            if current_index and current_index != index_id:
+            if current_id and current_id != index_id:
                 r = set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
+                current_id = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
                 executions.append({'set_index_pattern': True} if r else {'set_index_pattern': False})
 
             #
             # create dashboard: if index and index pattern exists
             #
             if (
-                current_index and
+                current_id and
                 check_index(endpoint, awsauth, index) and
                 not check_dashboard(endpoint, awsauth, index)
             ):
@@ -348,11 +350,11 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                         update=True
                     )
 
-                executions.append({'destination': True} if r else {'destination': False})
+                executions.append({'set_destination': True} if r else {'set_destination': False})
 
             except Exception as e:
                 print('Error (set_alert_destination): attempt failed with {}'.format(e))
-                executions.append({'destination': False})
+                executions.append({'set_destination': False})
 
         ##
         ## delete document: using provided range
@@ -391,7 +393,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     trigger_action_subject=monitor_trigger_subject,
                     trigger_action_message=monitor_trigger_message
                 )
-                executions.append({'alert': True} if r else {'alert': False})
+                executions.append({'set_alert': True} if r else {'set_alert': False})
 
     elif request_type == 'Delete':
         executions.append({'delete': True})
