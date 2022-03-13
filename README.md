@@ -136,7 +136,7 @@ OpenSearchConfiguration:
 
 ## Initialize Dashboard
 
-While it's possible to fully automate the creation of visualizations, and likely subsequent attachment to desired dashboard(s), this codebase prefers a more minimalist approach. Specifically, any small change in a visualization can easily become many magnitudes complicated for automation. Rather, this codebase setups up a default Index Pattern if one does not exist for a specified Index. Using the Index Pattern, an OpenSearch Dashboard is then created. The provided [`lambda.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/lambda.py) creates an empty dashboard by default:
+While it's possible to fully automate the creation of visualizations, and likely subsequent attachment to desired dashboard(s), this codebase prefers a more minimalist approach. Specifically, any small change in a visualization can easily become many magnitudes complicated for automation. Rather, this codebase can setup up a default Index Pattern if one does not exist for a specified Index. Using the Index Pattern, an OpenSearch Dashboard is then created. The provided [`lambda.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/lambda.py) creates an empty dashboard:
 
 ```python
 if initialize_dashboard:
@@ -165,7 +165,7 @@ if initialize_dashboard:
         executions.append({'set_dashboard': False})
 ```
 
-To turn-off this functionality, provide the `InitializeDashboard` parameter:
+To turn-on this functionality, provide the `InitializeDashboard` parameter:
 
 ```yaml
 OpenSearchConfiguration:
@@ -175,7 +175,7 @@ OpenSearchConfiguration:
         Region: !Ref AWS::Region
         OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
         OpenSearchIndex: !Ref OpenSearchIndex
-        InitalizeDashboard: false
+        InitalizeDashboard: true
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 

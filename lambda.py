@@ -156,7 +156,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         monitor_interval
     )).strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
-    initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'True').strip().capitalize()))
+    initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'False').strip().capitalize()))
     document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}').strip())
     executions               = []
 
@@ -223,7 +223,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
             index_id = index.replace('*', '').rstrip('-').rstrip('_')
             current_index = check_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
 
-            if current_index and current_index != index_id:
+            if current_index != index_id:
                 r = set_index_pattern(endpoint, awsauth, index_id=index_id, title=index)
                 executions.append({'set_index_pattern': True} if r else {'set_index_pattern': False})
 
