@@ -183,7 +183,7 @@ OpenSearchConfiguration:
 
 It's possible to perform index rotation for an OpenSearch Index. However, this segment introduces the ability to delete documents within a specified index, satisfying a `match` [query condition](https://opensearch.org/docs/latest/opensearch/rest-api/document-apis/delete-by-query/). This can be particularly useful when only the latest N days of documents are desired.  Consider the case of a producer sending data to a [Kinesis Stream](https://docs.aws.amazon.com/streams/latest/dev/introduction.html). This data stream could hypothetically be configured with a [Kinesis Firehose](https://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html) to buffer data into a datalake for long term storage.  However, the same data stream could be attached with an [event source mapping](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/integrations.html#integrations-kinesis) to an OpenSearch index. This allows the ability to keep the most recent data for visualization using OpenSearch Dashboard, while retaining the ability to perform historical analysis from the tangential datalake.
 
-The following example deletes all documents from a specified `OpenSearchIndex`, where a `message.utc` field from the index is older than or equal to 5 days from now:
+The following example deletes all documents from a specified `OpenSearchIndex`, where a `message.utc` field from the index is older than or equal to 30 days from now:
 
 ```yaml
 OpenSearchConfiguration:
@@ -193,13 +193,7 @@ OpenSearchConfiguration:
         Region: !Ref AWS::Region
         OpenSearchDomain: !Sub https://${OpenSearch.Outputs.NestedOpenSearchDomainEndpoint}
         OpenSearchIndex: !Ref OpenSearchIndex
-        DocumentDeleteRange: !Sub
-          - '{
-              "${OpenSearchMonitorTerm}": ["${OpenSearchMonitorTermValue}"],
-              "boost": 1.0
-            }'
-          - OpenSearchMonitorTerm: !Ref OpenSearchMonitorTerm
-            OpenSearchMonitorTermValue: !Ref OpenSearchMonitorTermValue
+        DocumentDeleteRange: '{"message.utc": { "lte": "now-30d" }'
     DependsOn: [OpenSearch, OpenSearchConfigurationFunction]
 ```
 
