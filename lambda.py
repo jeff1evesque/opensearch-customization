@@ -407,7 +407,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         response_url = event['ResponseURL']
         response_body = {}
 
-        print(executions)
+        print('Notice: overall execution {}'.format(executions))
         if all(list(y.values())[0] for y in [x for x in executions]):
             response_body['Status'] = 'SUCCESS'
         else:
