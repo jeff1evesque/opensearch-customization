@@ -272,7 +272,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ##
         if document_delete_range:
             r = delete_document(endpoint, awsauth, index, document_delete_range)
-            executions.append({'delete': True} if r else {'delete': False})
+            executions.append({'delete_document': True} if r else {'delete_document': False})
 
         ##
         ## monitor: used to setup alerting using exist sns topic
@@ -357,7 +357,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
         ##
         if document_delete_range:
             r = delete_document(endpoint, awsauth, index, document_delete_range)
-            executions.append({'delete': True} if r else {'delete': False})
+            executions.append({'delete_document': True} if r else {'delete_document': False})
 
         ##
         ## monitor: used to setup alerting using exist sns topic
@@ -392,7 +392,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                 executions.append({'alert': True} if r else {'alert': False})
 
     elif request_type == 'Delete':
-        executions.append(True)
+        executions.append({'delete': True})
         pass
 
     else:
@@ -403,10 +403,9 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     #
     if 'StackId' in event:
         response_url = event['ResponseURL']
-
-        print(response_url)
-
         response_body = {}
+
+        print(executions)
         if all(list(y.values())[0] for y in [x for x in executions]):
             response_body['Status'] = 'SUCCESS'
         else:
