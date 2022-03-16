@@ -157,7 +157,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
     )).strip()
     mappings                 = json.loads(properties.get('Mappings', '{}').strip())
     initialize_dashboard     = bool(strtobool(properties.get('InitalizeDashboard', 'False').strip().capitalize()))
-    document_delete_range    = json.loads(properties.get('DocumentDeleteRange', '{}'))
+    document_delete_range    = properties.get('DocumentDeleteRange', {})
     executions               = []
 
     #
