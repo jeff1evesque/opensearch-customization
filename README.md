@@ -250,6 +250,12 @@ Please review functions defined in the following files, and invoke them as desir
 - [`set_configuration.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/set_configuration.py)
 - [`delete_configuration.py`](https://github.com/jeff1evesque/opensearch_customization/blob/master/delete_configuration.py)
 
+## Compatibility
+
+While other versions of [Amazon OpenSearch](https://aws.amazon.com/opensearch-service/the-elk-stack/what-is-opensearch/) are likely compatible, they have not been explicitly tested. Feel free to [open an issue](https://github.com/jeff1evesque/opensearch_customization/issues/new), and adjust the [`README.md`](https://github.com/jeff1evesque/opensearch_customization#readme) to help denote which versions are compatible.
+
+- OpenSearch 1.1
+
 ## Bug Reporting
 
 Please open [an issue](https://github.com/jeff1evesque/opensearch_customization/issues/new) if a particular bug is found, or a feature is desired.
