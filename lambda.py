@@ -213,7 +213,7 @@ def lambda_handler(event, context, physicalResourceId=None, noEcho=False):
                     executions.append(False)
 
             else:
-                r = remap_index(endpoint, awsauth, index)
+                r = remap_index(endpoint, awsauth, index, mappings=mappings)
                 executions.append({'set_reindex': True} if r else {'set_reindex': False})
 
         if initialize_dashboard:
